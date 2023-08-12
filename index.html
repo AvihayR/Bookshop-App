@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/main.css">
+    <title>Bookshop</title>
+</head>
+
+<body onload="onInit()">
+    <section class="book-section">
+        <h1>The Bookshop📚</h1>
+
+        <div class="display-container">
+            <button class="display-btn" onclick="onSetLayout('grid')"><img src="img/grid.png" alt="Grid view books"
+                    class="icon"></button>
+            <button class="display-btn" onclick="onSetLayout('table')"><img src="img/table.png" alt="Table view books"
+                    class="icon"></button>
+        </div>
+
+        <nav class="top-nav">
+            <div class="dropdown" onclick="onToggleDropDown()">
+                <span class="sort-by">Sort by</span>
+                <img src="img/arrow.svg" alt="Down arrow">
+                <div class="dropdown-menu">
+                    <div class="select-sort" onclick="onSetSortBy(event,'name')">Name</div>
+                    <div class="select-sort" onclick="onSetSortBy(event,'name', true)">Name Descending</div>
+                    <div class="select-sort" onclick="onSetSortBy(event,'price')">Lowest Price</div>
+                    <div class="select-sort" onclick="onSetSortBy(event,'price', true)">Highest Price</div>
+                </div>
+            </div>
+            <form class="search-form" onsubmit="onFilterBooks(event)">
+                <input type="text" class="search-bar" placeholder="Search a book..">
+                <button class="search"><img src="img/mag-glass.png"></button>
+            </form>
+        </nav>
+
+        <table class="bookshop">
+            <thead>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </thead>
+            <tbody class="books">
+            </tbody>
+        </table>
+
+        <div class="grid-container">
+        </div>
+
+        <nav class="paging">
+            <button class="prev" title="Previous page" onclick="onPrevPage()"><img src="img/prev.png"
+                    alt="Previous"></button>
+            <button class="next" title="Next page" onclick="onNextPage()"><img src="img/next.png" alt="Next"></button>
+        </nav>
+
+        <button onclick="onAddBook()" class="add-book">Add a new book</button>
+    </section>
+
+    <section class="lower-body">
+        <div class="modal book-preview">
+        </div>
+        <div class="user-msg"></div>
+    </section>
+    <script src="js/services/util.service.js"></script>
+    <script src="js/services/books.service.js"></script>
+    <script src="js/books.controller.js"></script>
+</body>
+
+</html>
