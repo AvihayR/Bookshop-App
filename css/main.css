@@ -37,7 +37,7 @@ body {
     background-color: var(--light-grey);
 }
 
-nav.top-nav {
+.top-nav {
     position: relative;
 
     display: flex;
@@ -399,8 +399,6 @@ button.close:hover {
 
     border-radius: 15px;
     padding: 15px;
-
-    /* margin-top: 25px; */
 }
 
 div.card {
@@ -452,6 +450,26 @@ div.card {
     height: 20px;
 }
 
+div.books-map-count {
+    display: grid;
+    place-items: center;
+    gap: 5px;
+
+    color: var(--slack);
+    font-weight: 800;
+
+    margin-top: 15px;
+    padding: 10px;
+    border: 2px solid var(--grapes);
+    border-radius: 15px;
+
+}
+
+label.min-rate {
+    color: var(--slack);
+    font-weight: 600;
+}
+
 .hidden {
     z-index: -100;
     display: none;
@@ -467,7 +485,6 @@ div.card {
         flex-direction: row;
     }
 }
-
 
 /* Desktop */
 @media screen and (min-width: 992px) {

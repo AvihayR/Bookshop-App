@@ -2,14 +2,20 @@
 const STORAGE_KEY = 'booksDB'
 var gBooks
 var gFilterBy = { name: '', rate: 0 }
-const PAGE_SIZE = 6
+const PAGE_SIZE = 4
 var gPageIdx = 0
+var gCountBooksShown
 
+_createBooks()
 
 function getBooks() {
-    var books = gBooks.filter(book => book.name.toLowerCase().includes(gFilterBy.name.toLowerCase()))
+    var books = gBooks.filter(book =>
+        book.name.toLowerCase().includes(gFilterBy.name.toLowerCase()) &&
+        book.rate >= gFilterBy.rate)
+
+    gCountBooksShown = books.length
+
     var startIdx = gPageIdx * PAGE_SIZE
-    // console.log(startIdx, startIdx + PAGE_SIZE, gBooks.length)
     books = books.slice(startIdx, startIdx + PAGE_SIZE)
     return books
 }
@@ -19,29 +25,32 @@ function _createBooks() {
 
     if (!gBooks || !gBooks.length) {
         gBooks = [
-            _createBook('Pooh the bear', 50, 'pooh.png'),
+            _createBook('Pooh the bear', 50, 'pooh.png', 5),
             _createBook('Elemental', 75, 'elemental.png'),
-            _createBook('History of Graphic Design', 175, 'graphic.png'),
-            _createBook('Tale of 5 Balloons', 45, 'balloons.png')
+            _createBook('History of Graphic Design', 175, 'graphic.png', 3),
+            _createBook('Harry Potter', 200, 'harry_potter.jpeg'),
+            _createBook('How To Sketch', 22, 'how_to_sketch.jpg', 1),
+            _createBook('Animals 101', 12, '101_animals.jpg')
         ]
         _saveBooksToStorage()
     }
 }
 
-function _createBook(name, price, imgUrl) {
+function _createBook(name, price, imgUrl, rate = 0) {
     return {
         id: makeId(3),
         name,
         price,
         imgUrl,
-        rate: 0
+        rate,
+        desc: makeLorem(5)
     }
 }
 
 function setBookFilter(filterBy = {}) {
     if (filterBy.name !== undefined) gFilterBy.name = filterBy.name
     if (filterBy.rate !== undefined) gFilterBy.rate = filterBy.rate
-    console.log(gFilterBy)
+    // console.log(gFilterBy)
     return gFilterBy
 }
 
@@ -53,28 +62,28 @@ function setBookSort(sortBy) {
     }
 }
 
-function raiseRating(bookId) {
+function changeRate(bookId, diff) {
     const book = getBookById(bookId)
-    if (book.rate >= 10) return
-    book.rate++
+    const lastRate = book.rate
+    book.rate += diff
+    if (book.rate < 0 || book.rate > 10) book.rate = lastRate
     _saveBooksToStorage()
 }
 
-function lowerRating(bookId) {
-    const book = getBookById(bookId)
-    if (book.rate <= 0) return
-    book.rate--
-    _saveBooksToStorage()
-}
+// function nextPage() {
+//     if (isEndPage()) return
+//     gPageIdx++
+// }
 
-function nextPage() {
-    if (isEndPage()) return
-    gPageIdx++
-}
+// function prevPage() {
+//     if (isStartPage()) return
+//     gPageIdx--
+// }
 
-function prevPage() {
-    if (isStartPage()) return
-    gPageIdx--
+function changePage(diff) {
+    gPageIdx += diff
+    if (gPageIdx < 0) gPageIdx = 0
+    else if ((gPageIdx * PAGE_SIZE) >= gCountBooksShown) gPageIdx--
 }
 
 function isStartPage() {
@@ -82,7 +91,7 @@ function isStartPage() {
 }
 
 function isEndPage() {
-    return (gPageIdx * PAGE_SIZE + PAGE_SIZE) >= gBooks.length
+    return ((gPageIdx + 1) * PAGE_SIZE) >= gCountBooksShown
 }
 
 function getBookById(bookId) {
@@ -97,7 +106,7 @@ function updateBook(bookId, newPrice) {
 
 function addBook(name, price) {
     const book = _createBook(name, price, `${name}.png`)
-    gBooks.push(book)
+    gBooks.unshift(book)
     _saveBooksToStorage()
 }
 
@@ -105,6 +114,28 @@ function removeBook(bookId) {
     var bookIndex = gBooks.findIndex(book => book.id === bookId)
     gBooks.splice(bookIndex, 1)
     _saveBooksToStorage()
+}
+
+function getBooksCountByPriceMap() {
+    const BooksCountByRateMap = gBooks.reduce((map, book) => {
+        if (book.price < 20) map.cheap++
+        else if (book.price < 50) map.normal++
+        else map.expensive++
+        return map
+    }, { cheap: 0, normal: 0, expensive: 0 })
+    return BooksCountByRateMap
+}
+
+function getPageIdx() {
+    return gPageIdx
+}
+
+function getFavLayout() {
+    return loadFromStorage('favLayout') || 'table'
+}
+
+function saveLayoutToStorage() {
+    saveToStorage('favLayout', gLayout)
 }
 
 function _saveBooksToStorage() {

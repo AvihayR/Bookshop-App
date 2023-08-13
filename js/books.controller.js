@@ -3,7 +3,6 @@
 var gLayout
 
 function onInit() {
-    _createBooks()
     renderFilterByQueryParams()
     renderBooks()
     renderBtnState()
@@ -11,29 +10,21 @@ function onInit() {
 
 function renderBooks() {
     var books = getBooks()
-    const elGridCont = document.querySelector('.grid-container')
-    const elTBody = document.querySelector('tbody.books')
-
-    if (!books.length) {
-        (gLayout === 'grid') ?
-            elGridCont.innerHTML = `<span class="books-not-found"> No books found </span> ` :
-            elTBody.innerHTML = `<span class="books-not-found"> No books found </span> `
-        return
-    }
-
     gLayout = getFavLayout()
+    gLayout === 'grid' ? renderGrid(books) : renderTable(books)
 
-    var strHtmls = getBooksHtmls(books)
-    if (gLayout === 'grid') elGridCont.innerHTML = strHtmls.join('')
-    else elTBody.innerHTML = strHtmls.join('')
-    hideLastDisplay()
+    document.querySelector('.page-idx').innerText = getPageIdx() + 1
+    BooksMapCategory()
 }
 
 
-function getBooksHtmls(books) {
-    var strHtmls = ''
-    if (gLayout === 'grid') {
-        strHtmls = books.map(book => `
+function renderGrid(books) {
+    const elGridCont = document.querySelector('.grid-container')
+    const elTable = document.querySelector('table.bookshop')
+    if (!books.length) {
+        elGridCont.innerHTML = `<span class="books-not-found"> No books found </span> `
+    } else {
+        var strHtmls = books.map(book => `
         <div class="card">
         <h4>${book.name}</h4>
         <img src="img/${book.imgUrl}" class="book-img" alt="Photo of ${book.name}" onerror="this.src='img/book.png'">
@@ -45,8 +36,23 @@ function getBooksHtmls(books) {
         </nav>
         </div>
         `)
+
+        elGridCont.innerHTML = strHtmls.join('')
+
+    }
+    elTable.classList.add('hidden')
+    elGridCont.classList.remove('hidden')
+}
+
+
+function renderTable(books) {
+    const elTBody = document.querySelector('tbody.books')
+    const elGridCont = document.querySelector('.grid-container')
+    const elTable = document.querySelector('table.bookshop')
+    if (!books.length) {
+        elTBody.innerHTML = `<span class="books-not-found"> No books found </span> `
     } else {
-        strHtmls = books.map(book => `
+        var strHtmls = books.map(book => `
         <tr>
         <td>${book.id}</td>
         <td>${book.name}</td>
@@ -59,20 +65,28 @@ function getBooksHtmls(books) {
 
         </td>
         </tr>
-    `)
+        `)
+        elTBody.innerHTML = strHtmls.join('')
     }
-    return strHtmls
+    elTable.classList.remove('hidden')
+    elGridCont.classList.add('hidden')
 }
 
-function onFilterBooks(ev) {
-    ev.preventDefault()
-    const elSearchBar = document.querySelector('input.search-bar')
+function BooksMapCategory() {
+    const bookPriceCountMap = getBooksCountByPriceMap()
+    const elBookMapCount = document.querySelector('.books-map-count')
+    var strBookMapCount =
+        `<p> Cheap: ${bookPriceCountMap.cheap}</p>
+    <p> Normal: ${bookPriceCountMap.normal}</p>
+    <p> Expensive: ${bookPriceCountMap.expensive}</p>`
+    elBookMapCount.innerHTML = strBookMapCount
+}
 
-    const filterBy = { name: elSearchBar.value }
+function onFilterBooks(filterBy) {
     setBookFilter(filterBy)
     renderBooks()
-
-    const queryParams = `?bookName=${filterBy.name}&rate=${filterBy.rate || null}`
+    renderBtnState()
+    const queryParams = `?bookName=${filterBy.name || ''}&rate=${filterBy.rate || 0}`
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + queryParams
 
     window.history.pushState({ path: newUrl }, '', newUrl)
@@ -82,42 +96,31 @@ function renderBtnState() {
     const elPrevBtn = document.querySelector('button.prev')
     const elNextBtn = document.querySelector('button.next')
 
-    if (!isStartPage() && !isEndPage()) {
-        elPrevBtn.classList.remove('disabled')
-        elNextBtn.classList.remove('disabled')
-    }
+    elNextBtn.disabled = isEndPage()
+    elPrevBtn.disabled = isStartPage()
 
-    if (isStartPage()) {
-        elPrevBtn.classList.add('disabled')
-        elPrevBtn.disabled = true
-        elNextBtn.classList.remove('disabled')
-        elNextBtn.disabled = false
-    } else if (isEndPage()) {
-        elNextBtn.classList.add('disabled')
-        elNextBtn.disabled = true
-        elPrevBtn.classList.remove('disabled')
-        elPrevBtn.disabled = false
-    }
+    if (isStartPage()) elPrevBtn.classList.add('disabled')
+    else elPrevBtn.classList.remove('disabled')
+
+    if (isEndPage()) elNextBtn.classList.add('disabled')
+    else elNextBtn.classList.remove('disabled')
 }
 
-function onRaiseRating(bookId) {
-    raiseRating(bookId)
-    onRenderPreviewModal(bookId)
-}
+/// DONE: create 1 function
+// function onNextPage() {
+//     nextPage()
+//     renderBooks()
+//     renderBtnState()
+// }
 
-function onLowerRating(bookId) {
-    lowerRating(bookId)
-    onRenderPreviewModal(bookId)
-}
+// function onPrevPage() {
+//     prevPage()
+//     renderBooks()
+//     renderBtnState()
+// }
 
-function onNextPage() {
-    nextPage()
-    renderBooks()
-    renderBtnState()
-}
-
-function onPrevPage() {
-    prevPage()
+function onChangePage(diff) {
+    changePage(diff)
     renderBooks()
     renderBtnState()
 }
@@ -136,12 +139,14 @@ function renderFilterByQueryParams() {
     const queryParams = new URLSearchParams(window.location.search)
     const filterBy = {
         name: queryParams.get('bookName') || '',
-        // rate: +queryParams.get('rate') || 0
+        rate: +queryParams.get('rate') || 0
     }
 
-    if (!filterBy.name) return
+    if (!filterBy.name && !filterBy.rate) return
 
     document.querySelector('.search-bar').value = filterBy.name
+    document.querySelector('.filter-rate-range').value = filterBy.rate
+
     setBookFilter(filterBy)
 }
 
@@ -176,7 +181,7 @@ function onClosePreviewModal() {
 }
 
 function onRenderPreviewModal(bookId) {
-    const modal = document.querySelector('.book-preview')
+    const elModal = document.querySelector('.book-preview')
     const book = getBookById(bookId)
 
     var strHtml = `
@@ -186,41 +191,23 @@ function onRenderPreviewModal(bookId) {
         <h4 class="book-name">${book.name}</h4>
         <h5 class="book-price">${book.price}₪</h5>
         <h5 class="summary-caption">Summary:</h5>
-        <p>${makeLorem(5)}</p>
+        <p>${book.desc}</p>
+
+        <div class="rating-container">
+        <h6>Rating:</h6>
+        <button class="rate rate-down" onclick="onChangeRate('${bookId}', -1)"><img src="img/next.png"></button>
+        <span class="current-rating">${book.rate}</span>
+        <button class="rate rate-up" onclick="onChangeRate('${bookId}', 1)"><img src="img/prev.png"></button>
+        </div>
     `
-    modal.innerHTML = strHtml
-    renderRating(bookId)
-    modal.classList.add('open')
+    elModal.innerHTML = strHtml
+    elModal.classList.add('open')
 
 }
 
-function renderRating(bookId) {
-    const modal = document.querySelector('.book-preview')
-    const book = getBookById(bookId)
-
-    var strHtml = `
-    <div class="rating-container">
-    <h6>Rating:</h6>
-    <button class="rate rate-down" onclick="onLowerRating('${bookId}')"><img src="img/next.png"></button>
-    <span class="current-rating">${book.rate}</span>
-    <button class="rate rate-up" onclick="onRaiseRating('${bookId}')"><img src="img/prev.png"></button>
-    </div>
-    `
-    modal.innerHTML += strHtml
-}
-
-function hideLastDisplay() {
-    const elGridCont = document.querySelector('.grid-container')
-    const elTBody = document.querySelector('tbody.books')
-    const elTable = document.querySelector('table.bookshop')
-
-    if (gLayout === 'grid') {
-        elTable.classList.add('hidden')
-        elGridCont.classList.remove('hidden')
-    } else {
-        elTable.classList.remove('hidden')
-        elGridCont.classList.add('hidden')
-    }
+function onChangeRate(bookId, diff) {
+    changeRate(bookId, diff)
+    onRenderPreviewModal(bookId)
 }
 
 function onSetLayout(mode) {
@@ -230,26 +217,15 @@ function onSetLayout(mode) {
     renderBooks()
 }
 
-function getFavLayout() {
-    return loadFromStorage('favLayout') || 'table'
-}
-
-function saveLayoutToStorage() {
-    saveToStorage('favLayout', gLayout)
-}
-
 function onToggleDropDown() {
     const elMenu = document.querySelector('.dropdown-menu')
-
     elMenu.classList.toggle('open')
 }
 
 function flashMsg(msg) {
     const elMsg = document.querySelector('.user-msg')
-
     elMsg.innerText = msg
     elMsg.classList.add('open')
     setTimeout(() => elMsg.classList.remove('open'), 3000)
 }
 
-//<img src="img/${book.imgUrl}.png" onerror="this.src='img/default.png'>

@@ -19,7 +19,7 @@
                     class="icon"></button>
         </div>
 
-        <nav class="top-nav">
+        <div class="top-nav">
             <div class="dropdown" onclick="onToggleDropDown()">
                 <span class="sort-by">Sort by</span>
                 <img src="img/arrow.svg" alt="Down arrow">
@@ -30,11 +30,15 @@
                     <div class="select-sort" onclick="onSetSortBy(event,'price', true)">Highest Price</div>
                 </div>
             </div>
-            <form class="search-form" onsubmit="onFilterBooks(event)">
-                <input type="text" class="search-bar" placeholder="Search a book..">
-                <button class="search"><img src="img/mag-glass.png"></button>
-            </form>
-        </nav>
+            <input type="text" class="search-bar" oninput="onFilterBooks({name:this.value})"
+                placeholder="Search a book..">
+
+            <label class="min-rate">
+                Min Rate:
+                <input type="range" min="0" max="10" value="0" class="filter-rate-range"
+                    onchange="this.title=this.value;onFilterBooks({rate: +this.value})" />
+            </label>
+        </div>
 
         <table class="bookshop">
             <thead>
@@ -51,13 +55,19 @@
         </div>
 
         <nav class="paging">
-            <button class="prev" title="Previous page" onclick="onPrevPage()"><img src="img/prev.png"
+            <button class="prev" title="Previous page" onclick="onChangePage(-1)"><img src="img/prev.png"
                     alt="Previous"></button>
-            <button class="next" title="Next page" onclick="onNextPage()"><img src="img/next.png" alt="Next"></button>
+            <span class="page-idx"></span>
+            <button class="next" title="Next page" onclick="onChangePage(1)"><img src="img/next.png"
+                    alt="Next"></button>
         </nav>
 
         <button onclick="onAddBook()" class="add-book">Add a new book</button>
     </section>
+
+    <div class="books-map-count">
+
+    </div>
 
     <section class="lower-body">
         <div class="modal book-preview">
