@@ -7,6 +7,8 @@
     --honeydew: #e8fef5;
     --light-grey: #ebebeb;
     --stone: #d8d8d8ee;
+    --modal-width: 300px;
+    --modal-padding: 15px;
     font-family: 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
@@ -14,6 +16,7 @@
     box-sizing: border-box;
 }
 
+h6,
 h5,
 h4,
 h3,
@@ -37,6 +40,15 @@ body {
     background-color: var(--light-grey);
 }
 
+body.rtl {
+    direction: rtl;
+}
+
+body.rtl button.prev,
+body.rtl button.next {
+    transform: rotate(180deg);
+}
+
 .top-nav {
     position: relative;
 
@@ -47,10 +59,11 @@ body {
     gap: 25px;
 
     max-width: 75vw;
-    /* min-width: 90vw; */
 }
 
 .display-container {
+    display: flex;
+    gap: 15px;
     margin-block: 15px;
 }
 
@@ -69,6 +82,7 @@ div.dropdown:hover,
 .display-btn:hover,
 button.search:hover {
     background-color: var(--stone);
+    color: var(--slack);
 }
 
 div.dropdown {
@@ -334,10 +348,9 @@ button.close:hover {
     outline: 1px solid var(--dark-purple);
 }
 
-
 .modal.book-preview {
     position: fixed;
-    top: 15px;
+    top: 10vh;
     left: -150vw;
 
     display: flex;
@@ -345,8 +358,8 @@ button.close:hover {
     align-items: center;
     gap: 7px;
 
-    width: min(60vw, 320px);
-    padding: 15px;
+    width: var(--modal-width);
+    padding: var(--modal-padding);
 
     background-color: var(--stone);
     color: var(--slack);
@@ -360,7 +373,21 @@ button.close:hover {
 }
 
 .modal.book-preview.open {
-    left: 15px;
+    left: calc(50vw - var(--modal-width) / 2);
+}
+
+.modal.book-preview.open::after {
+    position: absolute;
+    content: 'Try swiping me left/right!';
+    top: 35%;
+    font-size: 1.5rem;
+    color: white;
+    background-color: var(--slack);
+    opacity: 0.8;
+}
+
+p.book-desc {
+    margin-block-start: 15px;
 }
 
 .user-msg {

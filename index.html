@@ -10,42 +10,59 @@
 
 <body onload="onInit()">
     <section class="book-section">
-        <h1>The Bookshop📚</h1>
+        <h1 data-trans="title">The Bookshop📚</h1>
 
         <div class="display-container">
             <button class="display-btn" onclick="onSetLayout('grid')"><img src="img/grid.png" alt="Grid view books"
                     class="icon"></button>
+
+            <div class="dropdown" onclick="onToggleLangDropDown()">
+                <span data-trans="lang" class="sort-by">Language</span>
+                <img src="img/arrow.svg" alt="Down arrow">
+                <div class="dropdown-menu lang">
+
+                    <div class="select-sort" onclick="onSetLang('en')"> <label data-trans="trans-en">English</label>
+                    </div>
+                    <div class="select-sort" onclick="onSetLang('he')"> <label data-trans="trans-he">Hebrew</label>
+                    </div>
+
+                </div>
+            </div>
+
             <button class="display-btn" onclick="onSetLayout('table')"><img src="img/table.png" alt="Table view books"
                     class="icon"></button>
         </div>
 
         <div class="top-nav">
-            <div class="dropdown" onclick="onToggleDropDown()">
-                <span class="sort-by">Sort by</span>
+            <div class="dropdown" onclick="onToggleSortDropDown()">
+                <span data-trans="sort-by" class="sort-by">Sort by</span>
                 <img src="img/arrow.svg" alt="Down arrow">
-                <div class="dropdown-menu">
-                    <div class="select-sort" onclick="onSetSortBy(event,'name')">Name</div>
-                    <div class="select-sort" onclick="onSetSortBy(event,'name', true)">Name Descending</div>
-                    <div class="select-sort" onclick="onSetSortBy(event,'price')">Lowest Price</div>
-                    <div class="select-sort" onclick="onSetSortBy(event,'price', true)">Highest Price</div>
+                <div class="dropdown-menu sort">
+                    <div data-trans="sort-name" class="select-sort" onclick="onSetSortBy(event,'name')">Name</div>
+                    <div data-trans="sort-name-des" class="select-sort" onclick="onSetSortBy(event,'name', true)">Name
+                        Descending</div>
+                    <div data-trans="sort-low-price" class="select-sort" onclick="onSetSortBy(event,'price')">Lowest
+                        Price</div>
+                    <div data-trans="sort-high-price" class="select-sort" onclick="onSetSortBy(event,'price', true)">
+                        Highest Price</div>
                 </div>
             </div>
-            <input type="text" class="search-bar" oninput="onFilterBooks({name:this.value})"
+            <input data-trans="search-book" type="text" class="search-bar" oninput="onFilterBooks({name:this.value})"
                 placeholder="Search a book..">
 
-            <label class="min-rate">
-                Min Rate:
-                <input type="range" min="0" max="10" value="0" class="filter-rate-range"
+            <article class="filter-rate-container">
+                <label for="filter-rate" data-trans="filter-rate" class="min-rate">Min Rate:</label>
+                <input id="filter-rate" type="range" min="0" max="10" value="0" class="filter-rate-range"
                     onchange="this.title=this.value;onFilterBooks({rate: +this.value})" />
-            </label>
+            </article>
         </div>
 
         <table class="bookshop">
             <thead>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Actions</th>
+                <th data-trans="th-name">Name</th>
+                <th data-trans="th-price">Price</th>
+                <th data-trans="th-actions">Actions</th>
             </thead>
             <tbody class="books">
             </tbody>
@@ -62,21 +79,34 @@
                     alt="Next"></button>
         </nav>
 
-        <button onclick="onAddBook()" class="add-book">Add a new book</button>
+        <button data-trans="new-book" onclick="onAddBook()" class="add-book">Add a new book</button>
     </section>
 
     <div class="books-map-count">
-
     </div>
 
     <section class="lower-body">
-        <div class="modal book-preview">
+        <div data-book-id="" class="modal book-preview">
+            <h3 data-trans="book-preview">Book Preview</h3>
+            <button onclick="onClosePreviewModal()" class="close">X</button>
+            <article class="main-card">
+                <!-- img -->
+                <!-- bookName -->
+                <!-- Price -->
+            </article>
+
+            <h6 data-trans="rating" class="rating-caption">Rating:</h6>
+            <article class="rating-container"></article>
+
         </div>
         <div class="user-msg"></div>
     </section>
     <script src="js/services/util.service.js"></script>
     <script src="js/services/books.service.js"></script>
+    <script src="js/services/i18n.service.js"></script>
     <script src="js/books.controller.js"></script>
+    <script src="js/i18n.controller.js"></script>
+    <script src="js/lib/hammer.js"></script>
 </body>
 
 </html>

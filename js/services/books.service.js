@@ -36,6 +36,27 @@ function _createBooks() {
     }
 }
 
+function getNextId(bookId) {
+    return getBookById(bookId).nextId
+}
+
+function addNegsIdToBooks() {
+    for (let i = 0; i < gBooks.length; i++) {
+        const currBook = gBooks[i]
+
+        if (i === gBooks.length - 1) {
+            currBook.nextId = gBooks[0].id
+            currBook.prevId = gBooks[i - 1].id
+        } else if (i === 0) {
+            currBook.nextId = gBooks[i + 1].id
+            currBook.prevId = gBooks[gBooks.length - 1].id
+        } else {
+            currBook.nextId = gBooks[i + 1].id
+            currBook.prevId = gBooks[i - 1].id
+        }
+    }
+}
+
 function _createBook(name, price, imgUrl, rate = 0) {
     return {
         id: makeId(3),
@@ -70,15 +91,6 @@ function changeRate(bookId, diff) {
     _saveBooksToStorage()
 }
 
-// function nextPage() {
-//     if (isEndPage()) return
-//     gPageIdx++
-// }
-
-// function prevPage() {
-//     if (isStartPage()) return
-//     gPageIdx--
-// }
 
 function changePage(diff) {
     gPageIdx += diff

@@ -1,11 +1,13 @@
 'use strict'
 
-var gLayout
+let gLayout
+let gHammer
 
 function onInit() {
     renderFilterByQueryParams()
     renderBooks()
     renderBtnState()
+    addNegsIdToBooks()
 }
 
 function renderBooks() {
@@ -30,9 +32,9 @@ function renderGrid(books) {
         <img src="img/${book.imgUrl}" class="book-img" alt="Photo of ${book.name}" onerror="this.src='img/book.png'">
         <h5>${book.price}₪</h2>
         <nav class="button-nav">
-        <button onclick="onRenderPreviewModal('${book.id}', event)"><img src="img/eyes.png" alt="Open book details"></button>
-        <button onclick="onRemoveBook('${book.id}', event)"><img src="img/trash.png" alt="Remove book"></button>
-        <button onclick="onUpdateBook('${book.id}', event)"><img src="img/edit.png" alt="Edit book"></button>
+        <button onclick="onRenderPreviewModal('${book.id}', event);onSwipe()"><img src="img/eyes.png" alt="Open book details"></button>
+        <button onclick="onRemoveBook('${book.id}', event); onSwipe()"><img src="img/trash.png" alt="Remove book"></button>
+        <button onclick="onUpdateBook('${book.id}', event); onSwipe()"><img src="img/edit.png" alt="Edit book"></button>
         </nav>
         </div>
         `)
@@ -59,9 +61,9 @@ function renderTable(books) {
         <td>${book.price}</td>
 
         <td>
-        <button onclick="onRenderPreviewModal('${book.id}', event)" class="read">Read</button>
-        <button onclick="onRemoveBook('${book.id}', event)" class="delete">Delete</button>
-        <button onclick="onUpdateBook('${book.id}', event)" class="update">Update</button>
+        <button data-trans="read" onclick="onRenderPreviewModal('${book.id}', event)" class="read">Read</button>
+        <button data-trans="delete" onclick="onRemoveBook('${book.id}', event)" class="delete">Delete</button>
+        <button data-trans="update" onclick="onUpdateBook('${book.id}', event)" class="update">Update</button>
 
         </td>
         </tr>
@@ -70,23 +72,29 @@ function renderTable(books) {
     }
     elTable.classList.remove('hidden')
     elGridCont.classList.add('hidden')
+    doTrans()
 }
 
 function BooksMapCategory() {
     const bookPriceCountMap = getBooksCountByPriceMap()
     const elBookMapCount = document.querySelector('.books-map-count')
     var strBookMapCount =
-        `<p> Cheap: ${bookPriceCountMap.cheap}</p>
-    <p> Normal: ${bookPriceCountMap.normal}</p>
-    <p> Expensive: ${bookPriceCountMap.expensive}</p>`
+        `<p> <label data-trans="cheap-p">Cheap:</label> ${bookPriceCountMap.cheap}</p>
+    <p> <label data-trans="average-p">Normal:</label> ${bookPriceCountMap.normal}</p>
+    <p> <label data-trans="expensive-p">Expensive:</label> ${bookPriceCountMap.expensive}</p>`
     elBookMapCount.innerHTML = strBookMapCount
+    doTrans()
 }
 
 function onFilterBooks(filterBy) {
     setBookFilter(filterBy)
     renderBooks()
     renderBtnState()
-    const queryParams = `?bookName=${filterBy.name || ''}&rate=${filterBy.rate || 0}`
+    setQueryParams(filterBy)
+}
+
+function setQueryParams(filterBy = {}) {
+    const queryParams = `?bookName=${filterBy.name || ''}&rate=${filterBy.rate || 0}&lang=${getLang() || ''}`
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + queryParams
 
     window.history.pushState({ path: newUrl }, '', newUrl)
@@ -106,19 +114,6 @@ function renderBtnState() {
     else elNextBtn.classList.remove('disabled')
 }
 
-/// DONE: create 1 function
-// function onNextPage() {
-//     nextPage()
-//     renderBooks()
-//     renderBtnState()
-// }
-
-// function onPrevPage() {
-//     prevPage()
-//     renderBooks()
-//     renderBtnState()
-// }
-
 function onChangePage(diff) {
     changePage(diff)
     renderBooks()
@@ -131,16 +126,19 @@ function onSetSortBy(ev, sortMethod, isDesc = false) {
     sortBy[sortMethod] = (isDesc) ? -1 : 1
     // console.log(sortBy)
     setBookSort(sortBy)
-    onToggleDropDown()
+    onToggleSortDropDown()
     renderBooks()
 }
 
 function renderFilterByQueryParams() {
     const queryParams = new URLSearchParams(window.location.search)
+
     const filterBy = {
         name: queryParams.get('bookName') || '',
         rate: +queryParams.get('rate') || 0
     }
+    const lang = queryParams.get('lang')
+    setLang(lang)
 
     if (!filterBy.name && !filterBy.rate) return
 
@@ -177,33 +175,59 @@ function onUpdateBook(bookId) {
 function onClosePreviewModal() {
     const modal = document.querySelector('.book-preview')
     modal.classList.remove('open')
-
 }
 
 function onRenderPreviewModal(bookId) {
     const elModal = document.querySelector('.book-preview')
-    const book = getBookById(bookId)
+    const elMainCard = document.querySelector('.main-card')
+    const elRating = document.querySelector('.rating-container')
 
-    var strHtml = `
-        <button onclick="onClosePreviewModal()" class="close">X</button>
-        <h3>Book Preview</h3>
+    const book = getBookById(bookId)
+    elModal.dataset.bookId = bookId
+    elModal.dataset.prevId = book.prevId
+    elModal.dataset.nextId = book.nextId
+
+
+    var mainStrHtml = `
         <img src="img/${book.imgUrl}" class="book-img" alt="Photo of ${book.name}" onerror="this.src='img/book.png'">
         <h4 class="book-name">${book.name}</h4>
         <h5 class="book-price">${book.price}₪</h5>
-        <h5 class="summary-caption">Summary:</h5>
-        <p>${book.desc}</p>
-
-        <div class="rating-container">
-        <h6>Rating:</h6>
+        <p class="book-desc">${book.desc}</p>
+    `
+    var ratingStrHtml =
+        `
         <button class="rate rate-down" onclick="onChangeRate('${bookId}', -1)"><img src="img/next.png"></button>
         <span class="current-rating">${book.rate}</span>
         <button class="rate rate-up" onclick="onChangeRate('${bookId}', 1)"><img src="img/prev.png"></button>
-        </div>
-    `
-    elModal.innerHTML = strHtml
-    elModal.classList.add('open')
+        `
+    elMainCard.innerHTML = mainStrHtml
+    elRating.innerHTML = ratingStrHtml
 
+    elModal.classList.add('open')
+    createModalHammer()
 }
+
+
+
+function createModalHammer() {
+    const elModalPreview = document.querySelector('.book-preview')
+    const bookId = elModalPreview.dataset.bookId
+    const book = getBookById(bookId)
+
+    if (!gHammer) {
+        gHammer = new Hammer(elModalPreview, {})
+    }
+}
+
+function onSwipe() {
+    if (!gHammer) return
+    gHammer.on('swiperight swipeleft', ev => {
+        let elModal = document.querySelector('.modal.book-preview')
+        if (ev.type === 'swiperight') onRenderPreviewModal(elModal.dataset.nextId)
+        else onRenderPreviewModal(elModal.dataset.prevId)
+    })
+}
+
 
 function onChangeRate(bookId, diff) {
     changeRate(bookId, diff)
@@ -217,8 +241,13 @@ function onSetLayout(mode) {
     renderBooks()
 }
 
-function onToggleDropDown() {
-    const elMenu = document.querySelector('.dropdown-menu')
+function onToggleSortDropDown() {
+    const elMenu = document.querySelector('.dropdown-menu.sort')
+    elMenu.classList.toggle('open')
+}
+
+function onToggleLangDropDown() {
+    const elMenu = document.querySelector('.dropdown-menu.lang')
     elMenu.classList.toggle('open')
 }
 
